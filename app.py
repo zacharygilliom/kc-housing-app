@@ -45,7 +45,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.layout = html.Div(
     children=[
         html.H1(
-            children='Test',
+            children="King's County Housing Data (2014 - 2015)",
             style={'textAlign':'center'}
             ),
         dcc.Graph(
@@ -59,48 +59,7 @@ app.layout = html.Div(
                 color='floors',
                 title='Price overtime and colored by # of bedrooms'
             )
-                #{'data': [{
-                #    'x':df['sqft_living'], 
-                #    'y': df['price'], 
-                #    'type': 'scatter',
-                #    'marker' : {
-                #        'color': colors[8]
-                #        },
-                #    'mode': 'markers'
-                #    },
-                #    
-                #{
-                #    'x':df['sqft_lot'],
-                #    'y': df['price'],
-                #    'type': 'scatter',
-                #    'marker': {
-                #        'color': colors[9]
-                #        },
-                #    'mode': 'markers'
-                #    }],
-                #'layout': {
-                #    'title': 'Living Square Footage vs Lot Square Footage',
-                #    'titlefont': {'color':'#FFF'},
-                #    'plot_bgcolor': '#303030',
-                #    'paper_bgcolor': '#303030',
-                #    'xaxis': {
-                #        'tickfont': {
-                #            'color': '#FFF',
-                #            },
-                #        'title': 'Living Square Footage',
-                #        'color': '#FFF'
-                #        },
-                #    'yaxis': {
-                #        'tickfont': {
-                #            'color': '#FFF',
-                #            },
-                #        'title': 'Lot Square Footage',
-                #        'color': '#FFF'
-                #        }
-                #}
-
-                #}
-                
+                                
                 
 
             )
