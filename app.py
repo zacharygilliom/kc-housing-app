@@ -15,16 +15,16 @@ df = pd.read_csv('data/kc_house_data.csv')
 
 text_colors = 'rgb(0, 0, 0)'
 colors = [
-        '#375a7f', #blue
-        '#6610f2', #indigo
-        '#6f42c1', #purple
-        '#e83e8c', #pink
-        '#E74C3C', #red
-        '#fd7e14', #orange
-        '#F39C12', #yellow
-        '#00bc8c', #green
-        '#20c997', #teal
-        '#3498DB'  #cyan
+        '#375a7f', #blue 0
+        '#6610f2', #indigo 1
+        '#6f42c1', #purple 2
+        '#e83e8c', #pink 3
+        '#E74C3C', #red 4
+        '#fd7e14', #orange 5
+        '#F39C12', #yellow 6
+        '#00bc8c', #green 7
+        '#20c997', #teal 8
+        '#3498DB'  #cyan 9
     ]
 
 def change_datetime(df, col):
@@ -34,7 +34,7 @@ def change_datetime(df, col):
 
 df['date'] = change_datetime(df, 'date')
 
-df = df[df['bedrooms'] < 3]
+# df = df[df['bedrooms'] < 3]
 
 print(df.columns)
 print(list(df['bedrooms'].unique()))
@@ -50,25 +50,44 @@ app.layout = html.Div(
             ),
         dcc.Graph(
             id='sqft_living vs sqft_lot',
-            figure=px.scatter(
-                df,
-                x='date',
-                y='price',
-                size='sqft_living',
-                template='plotly_dark',
-                color='floors',
-                title='Price overtime and colored by # of bedrooms'
-            )
-                                
-                
+        ),
+        dcc.Markdown('''
+            Please enter the number of bedrooms to view.
+            '''
+        ),
+        dcc.Input(
+                    id='bedrooms',
+                    type='number',
+                    value=1,
+                    debounce=True,
+                    placeholder=1,
+                    style={
+                        'backgroundColor': 'rgb(0,0,0)',
+                        'color': colors[8],
+                        'textAlign':'center'
+                    }
+                )
+            ]
+        )    
 
-            )
-            
-        ]
-        
-        
-        
+@app.callback(Output('sqft_living vs sqft_lot', 'figure'),
+        [Input('bedrooms', 'value')])
+def update_scatter(val):
+    df1 = df[df['bedrooms'] == val]
+    s = px.scatter(
+            df1,
+            x='date',
+            y='price',
+            size='sqft_living',
+            template='plotly_dark',
+            color='floors',
+            title='Price Over Time and Coloured by # of Bedrooms'
     )
+    s.update_layout(
+            font_family="Rockwell"
+    )
+    return s
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
