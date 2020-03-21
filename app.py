@@ -51,24 +51,31 @@ app.layout = html.Div(
         dcc.Graph(
             id='sqft_living vs sqft_lot',
         ),
-        dcc.Markdown('''
-            Please enter the number of bedrooms to view.
-            '''
-        ),
-        dcc.Input(
+        html.Div(
+            children=[
+                html.H1(
+                    children='Please Enter the Number of Bedrooms',
+                    style={'textAlign': 'center'}
+                ),
+                dcc.Input(
                     id='bedrooms',
                     type='number',
-                    value=1,
                     debounce=True,
+                    value=1,
                     placeholder=1,
                     style={
-                        'backgroundColor': 'rgb(0,0,0)',
-                        'color': colors[8],
+                        'backgroundColor': 'rgb(-1,0,0)',
+                        'color': colors[7],
                         'textAlign':'center'
-                    }
-                )
-            ]
-        )    
+                    },            
+                    
+                ),
+            ],
+            style={'textAlign':'center'}
+        )
+    ]
+)
+            
 
 @app.callback(Output('sqft_living vs sqft_lot', 'figure'),
         [Input('bedrooms', 'value')])
