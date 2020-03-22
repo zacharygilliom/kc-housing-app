@@ -8,7 +8,7 @@ import dash_table as dt
 import plotly.io as pio
 import plotly.express as px
 from dash.dependencies import Input, Output
-
+import plotly.graph_objects as go
 
 
 df = pd.read_csv('data/kc_house_data.csv')
@@ -34,7 +34,7 @@ def change_datetime(df, col):
 
 df['date'] = change_datetime(df, 'date')
 
-# df = df[df['bedrooms'] < 3]
+
 
 print(df.columns)
 print(list(df['bedrooms'].unique()))
@@ -48,12 +48,13 @@ app.layout = html.Div(
             children="King's County Housing Data (2014 - 2015)",
             style={'textAlign':'center'}
             ),
-        dcc.Graph(
-            id='sqft_living vs sqft_lot',
+        dcc.Markdown('''
+            ### Let's take a look at how the number of bedrooms in a house has impacted the price of the house.
+            '''
         ),
         html.Div(
             children=[
-                html.H1(
+                html.H3(
                     children='Please Enter the Number of Bedrooms',
                     style={'textAlign': 'center'}
                 ),
@@ -72,15 +73,27 @@ app.layout = html.Div(
                 ),
             ],
             style={'textAlign':'center'}
+        ),
+        dcc.Graph(
+            id='sqft_living vs sqft_lot',
+        ),
+        
+        html.Div(
+            children=[
+                dcc.Graph(
+                    id='bar-graph'
+                )
+            ]
         )
     ]
 )
-            
 
 @app.callback(Output('sqft_living vs sqft_lot', 'figure'),
         [Input('bedrooms', 'value')])
 def update_scatter(val):
-    df1 = df[df['bedrooms'] == val]
+    df1 = df.copy()
+    df1 = df1.loc[df1.bedrooms == val]
+    df1['floors'] = df1['floors'].astype(str)
     s = px.scatter(
             df1,
             x='date',
@@ -95,6 +108,28 @@ def update_scatter(val):
     )
     return s
 
+@app.callback(Output('bar-graph', 'figure'),
+        [Input('bedrooms', 'value')])
+def update_bar(val):
+    df2 = df.copy()
+    df2 = df2.loc[df2.bedrooms ==val]
+    df2['floors'] = df2['floors'].astype(str)
+    df3 = df2.groupby(['floors', 'yr_built'], as_index=False).sum()
+    print(df3)
+    f = px.bar(
+            df3,
+            x='yr_built',
+            y='price',
+            color='floors',
+            barmode='group',
+            template='plotly_dark'
+        )
+    f.update_layout(
+            title='Year House Built Grouped By Number of Floors',
+            bargap=0.15,
+            bargroupgap=0.05
+        )
+    return f
 
 if __name__ == '__main__':
     app.run_server(debug=True)
