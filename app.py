@@ -33,11 +33,12 @@ def change_datetime(df, col):
     return df[col]
 
 df['date'] = change_datetime(df, 'date')
+df['waterfront'] = df['waterfront'].astype(str)
+df_bar_group = df[df.bedrooms < 30].groupby(['bedrooms', 'waterfront'], as_index=False).mean() 
 
 
-
-print(df.columns)
-print(list(df['bedrooms'].unique()))
+# print(df.columns)
+# print(list(df['bedrooms'].unique()))
 external_stylesheets = [dbc.themes.DARKLY]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -77,11 +78,29 @@ app.layout = html.Div(
         dcc.Graph(
             id='sqft_living vs sqft_lot',
         ),
-        
+        dcc.Graph(
+            id='waterfront_bar_graph',
+            figure=px.bar(
+                df_bar_group,
+                x='bedrooms',
+                y='price',
+                color='waterfront',
+                barmode='group',
+                template='plotly_dark'
+            )
+        ),
+
         html.Div(
             children=[
                 dcc.Graph(
                     id='bar-graph'
+                )
+            ]
+        ),
+        html.Div(
+            children=[
+                dcc.Graph(
+                    id='line-graph-bedrooms'
                 )
             ]
         )
@@ -115,7 +134,6 @@ def update_bar(val):
     df2 = df2.loc[df2.bedrooms ==val]
     df2['floors'] = df2['floors'].astype(str)
     df3 = df2.groupby(['floors', 'yr_built'], as_index=False).sum()
-    print(df3)
     f = px.bar(
             df3,
             x='yr_built',
@@ -131,5 +149,26 @@ def update_bar(val):
         )
     return f
 
+@app.callback(Output('line-graph-bedrooms', 'figure'),
+        [Input('bedrooms','value')])
+
+def update_line(val):
+    df3 = df.copy()
+    df3 = df3.loc[df3.bedrooms == val]
+    df3['floors']= df3['floors'].astype(str)
+    df3 = df3.groupby(['floors','yr_built'], as_index=False).sum()
+    j = px.line(
+           df3,
+           x='yr_built',
+           y='price',
+           color='floors',
+           template='plotly_dark'
+        )
+
+
+    return j
+
 if __name__ == '__main__':
     app.run_server(debug=True)
+    # app.scripts.config.serve_locally = True
+    # app.css.config.serve_locally = True
