@@ -34,8 +34,8 @@ def change_datetime(df, col):
 
 df['date'] = change_datetime(df, 'date')
 df['waterfront'] = df['waterfront'].astype(str)
-df_bar_group = df[df.bedrooms < 30].groupby(['bedrooms', 'waterfront'], as_index=False).mean() 
-
+df_bar_group = df[df.bedrooms < 30].groupby(['bedrooms'], as_index=False).mean() 
+# df_wat_bed_group = df[df[.bedrooms < 30].groupby(['waterfront'], as_index=False).mean()
 
 # print(df.columns)
 # print(list(df['bedrooms'].unique()))
@@ -57,7 +57,8 @@ app.layout = html.Div(
             children=[
                 html.H3(
                     children='Please Enter the Number of Bedrooms',
-                    style={'textAlign': 'center'}
+                    style={'textAlign': 'center',
+                    }
                 ),
                 dcc.Input(
                     id='bedrooms',
@@ -76,15 +77,12 @@ app.layout = html.Div(
             style={'textAlign':'center'}
         ),
         dcc.Graph(
-            id='sqft_living vs sqft_lot',
-        ),
-        dcc.Graph(
             id='waterfront_bar_graph',
             figure=px.bar(
                 df_bar_group,
                 x='bedrooms',
                 y='price',
-                color='waterfront',
+                # color='waterfront',
                 barmode='group',
                 template='plotly_dark'
             )
@@ -93,6 +91,7 @@ app.layout = html.Div(
         html.Div(
             children=[
                 dcc.Graph(
+                #TODO Need to style this bargraph to show some more important data
                     id='bar-graph'
                 )
             ]
@@ -100,46 +99,26 @@ app.layout = html.Div(
         html.Div(
             children=[
                 dcc.Graph(
+                    #TODO Fix this graph so we can look at some other factors.
                     id='line-graph-bedrooms'
                 )
             ]
         )
     ]
 )
-
-@app.callback(Output('sqft_living vs sqft_lot', 'figure'),
-        [Input('bedrooms', 'value')])
-def update_scatter(val):
-    df1 = df.copy()
-    df1 = df1.loc[df1.bedrooms == val]
-    df1['floors'] = df1['floors'].astype(str)
-    s = px.scatter(
-            df1,
-            x='date',
-            y='price',
-            size='sqft_living',
-            template='plotly_dark',
-            color='floors',
-            title='Price Over Time and Coloured by # of Bedrooms'
-    )
-    s.update_layout(
-            font_family="Rockwell"
-    )
-    return s
-
 @app.callback(Output('bar-graph', 'figure'),
         [Input('bedrooms', 'value')])
 def update_bar(val):
     df2 = df.copy()
     df2 = df2.loc[df2.bedrooms ==val]
     df2['floors'] = df2['floors'].astype(str)
-    df3 = df2.groupby(['floors', 'yr_built'], as_index=False).sum()
+    df3 = df2.groupby(['floors', 'date'], as_index=False).mean()
     f = px.bar(
             df3,
-            x='yr_built',
+            x='date',
             y='price',
             color='floors',
-            barmode='group',
+            barmode='stack',
             template='plotly_dark'
         )
     f.update_layout(
@@ -153,16 +132,16 @@ def update_bar(val):
         [Input('bedrooms','value')])
 
 def update_line(val):
-    df3 = df.copy()
-    df3 = df3.loc[df3.bedrooms == val]
-    df3['floors']= df3['floors'].astype(str)
-    df3 = df3.groupby(['floors','yr_built'], as_index=False).sum()
-    j = px.line(
-           df3,
-           x='yr_built',
+    # TODO Need to make this graph look better.  What are some other factors we can look at that impact the price?? 
+    df_wat_bed_group = df[df.bedrooms < 30].groupby(['waterfront', 'date'], as_index=False).mean()
+    df_wat_bed_group = df_wat_bed_group.loc[df_wat_bed_group.bedrooms == val]
+    j = px.bar(
+           df_wat_bed_group,
+           x='date',
            y='price',
-           color='floors',
-           template='plotly_dark'
+           color='waterfront',
+           template='plotly_dark',
+           barmode='group'
         )
 
 
