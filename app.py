@@ -9,7 +9,7 @@ import plotly.io as pio
 import plotly.express as px
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
-
+import math as math
 
 df = pd.read_csv('data/kc_house_data.csv')
 
@@ -27,15 +27,26 @@ colors = [
         '#3498DB'  #cyan 9
     ]
 
+categorical_variables = ['bathrooms', 'floors', 'waterfront', 'view', 'condition', 'grade']
+
+
 def change_datetime(df, col):
     df[col] = df[col].apply(lambda x: x[:-7]).astype(int)
     df[col] = df[col].apply(lambda x: pd.to_datetime(x, format='%Y%m%d'))
     return df[col]
+df['date_bin'] = df['yr_built']
+df['date_bin'] = df['date_bin'].apply(lambda x: (math.floor(x/10) * 10))
+df['date_bin'] = df['date_bin'].astype(str)
+cat_orders = ['1900', '1910', '1920', '1930', '1940', '1950', 
+                '1960', '1970', '1980', '1990', '2000', '2010']
+
+df = df[df.bedrooms < 12]
 
 df['date'] = change_datetime(df, 'date')
 df['waterfront'] = df['waterfront'].astype(str)
 df_bar_group = df[df.bedrooms < 30].groupby(['bedrooms'], as_index=False).mean() 
 # df_wat_bed_group = df[df[.bedrooms < 30].groupby(['waterfront'], as_index=False).mean()
+
 
 # print(df.columns)
 # print(list(df['bedrooms'].unique()))
@@ -50,104 +61,101 @@ app.layout = html.Div(
             style={'textAlign':'center'}
             ),
         dcc.Markdown('''
-            ### Let's take a look at how the number of bedrooms in a house has impacted the price of the house.
-            '''
+            ### Select a categorical variable to see how the variable impacts the price.
+            ''',
+            style={'textAlign': 'center'}
         ),
         html.Div(
             children=[
-                html.H3(
-                    children='Please Enter the Number of Bedrooms',
-                    style={'textAlign': 'center',
-                    }
-                ),
-                dcc.Input(
-                    id='bedrooms',
-                    type='number',
-                    debounce=True,
-                    value=1,
-                    placeholder=1,
-                    style={
-                        'backgroundColor': 'rgb(-1,0,0)',
-                        'color': colors[7],
-                        'textAlign':'center'
-                    },            
-                    
+                dbc.FormGroup(
+                    [
+                        dbc.RadioItems(
+                    id='categorical-variables',
+                    options=[
+                        {'label': 'Bedrooms', 'value': 'bedrooms'},
+                        {'label': 'Floors', 'value': 'floors'},
+                        {'label': 'Bathrooms', 'value': 'bathrooms'},
+                        {'label': 'Waterfront', 'value': 'waterfront'},
+                        {'label': 'View', 'value': 'view'},
+                        {'label': 'Condition', 'value': 'condition'},
+                        {'label': 'Grade', 'value': 'grade'}
+                    ],
+                value='bedrooms',
+                inline=True,
+                style={'textAlign': 'center'
+                     },
+                    )
+                ]
                 ),
             ],
-            style={'textAlign':'center'}
         ),
         dcc.Graph(
-            id='waterfront_bar_graph',
-            figure=px.bar(
-                df_bar_group,
-                x='bedrooms',
-                y='price',
-                # color='waterfront',
-                barmode='group',
-                template='plotly_dark'
-            )
-        ),
-
-        html.Div(
-            children=[
-                dcc.Graph(
-                #TODO Need to style this bargraph to show some more important data
-                    id='bar-graph'
-                )
-            ]
-        ),
-        html.Div(
-            children=[
-                dcc.Graph(
-                    #TODO Fix this graph so we can look at some other factors.
-                    id='line-graph-bedrooms'
-                )
-            ]
+            id='bar'
         )
     ]
 )
-@app.callback(Output('bar-graph', 'figure'),
-        [Input('bedrooms', 'value')])
+@app.callback(Output('bar', 'figure'),
+        [Input('categorical-variables', 'value')])
+
 def update_bar(val):
-    df2 = df.copy()
-    df2 = df2.loc[df2.bedrooms ==val]
-    df2['floors'] = df2['floors'].astype(str)
-    df3 = df2.groupby(['floors', 'date'], as_index=False).mean()
-    f = px.bar(
-            df3,
-            x='date',
+    #TODO Fix the graph so it shows the graph better.
+    df_new = df.groupby([val, 'date_bin'], as_index=False).mean()
+    df_new[val] = df_new[val].astype(str)
+    print(str(val), df[val])
+    fig = px.bar(
+            df_new,
+            # x='date',
+            x=val,
             y='price',
-            color='floors',
-            barmode='stack',
-            template='plotly_dark'
-        )
-    f.update_layout(
-            title='Year House Built Grouped By Number of Floors',
-            bargap=0.15,
-            bargroupgap=0.05
-        )
-    return f
+            template='plotly_dark',
+            color='date_bin',
+            barmode='group',
+            category_orders ={'date_bin': cat_orders}
 
-@app.callback(Output('line-graph-bedrooms', 'figure'),
-        [Input('bedrooms','value')])
-
-def update_line(val):
-    # TODO Need to make this graph look better.  What are some other factors we can look at that impact the price?? 
-    df_wat_bed_group = df[df.bedrooms < 30].groupby(['waterfront', 'date'], as_index=False).mean()
-    df_wat_bed_group = df_wat_bed_group.loc[df_wat_bed_group.bedrooms == val]
-    j = px.bar(
-           df_wat_bed_group,
-           x='date',
-           y='price',
-           color='waterfront',
-           template='plotly_dark',
-           barmode='group'
         )
 
+    return fig
 
-    return j
-
+# @app.callback(Output('bar-graph', 'figure'),
+#         [Input('bedrooms', 'value')])
+# def update_bar(val):
+#     df2 = df.copy()
+#     df2 = df2.loc[df2.bedrooms ==val]
+#     df2['floors'] = df2['floors'].astype(str)
+#     df3 = df2.groupby(['floors', 'date'], as_index=False).mean()
+#     f = px.bar(
+#             df3,
+#             x='date',
+#             y='price',
+#             color='floors',
+#             barmode='stack',
+#             template='plotly_dark'
+#         )
+#     f.update_layout(
+#             title='Year House Built Grouped By Number of Floors',
+#             bargap=0.15,
+#             bargroupgap=0.05
+#         )
+#     return f
+# 
+# @app.callback(Output('line-graph-bedrooms', 'figure'),
+#         [Input('bedrooms','value')])
+# 
+# def update_line(val):
+#     # TODO Need to make this graph look better.  What are some other factors we can look at that impact the price?? 
+#     df_wat_bed_group = df[df.bedrooms < 30].groupby(['waterfront', 'date'], as_index=False).mean()
+#     df_wat_bed_group = df_wat_bed_group.loc[df_wat_bed_group.bedrooms == val]
+#     j = px.bar(
+#            df_wat_bed_group,
+#            x='date',
+#            y='price',
+#            color='waterfront',
+#            template='plotly_dark',
+#            barmode='group'
+#         )
+# 
+# 
+#     return j
+# 
 if __name__ == '__main__':
     app.run_server(debug=True)
-    # app.scripts.config.serve_locally = True
-    # app.css.config.serve_locally = True

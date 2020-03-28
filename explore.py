@@ -1,7 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+import math as math
 df = pd.read_csv('data/kc_house_data.csv')
 
 
@@ -80,5 +80,24 @@ df_wat_bed_grouped = df_wat_bed_grouped.loc[df_wat_bed_grouped.bedrooms <= 8]
 # plt.savefig('image8.png')
 
 
-sns.barplot(data=df_wat_bed_grouped, x='bedrooms', y='price', hue='waterfront')
-plt.savefig('image9.png')
+# sns.barplot(data=df_wat_bed_grouped, x='bedrooms', y='price', hue='waterfront')
+# plt.savefig('image9.png')
+
+print(df.columns)
+print(df.dtypes)
+for i in df.columns:
+    print(i, len(df[i].unique()))
+
+print(df['bathrooms'].unique())
+
+
+df['date_bin'] = df['yr_built']
+print(df['date_bin'].head())
+
+
+df['date_bin'] = df['date_bin'].apply(lambda x: (math.floor(x/10) * 10))
+
+
+
+print(df['date_bin'].head())
+
