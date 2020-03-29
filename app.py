@@ -1,3 +1,5 @@
+#!/usr/bin python3
+
 import dash
 import pandas as pd
 import dash_core_components as dcc
@@ -27,29 +29,34 @@ colors = [
         '#3498DB'  #cyan 9
     ]
 
-categorical_variables = ['bathrooms', 'floors', 'waterfront', 'view', 'condition', 'grade']
+# categorical_variables = ['bathrooms', 'floors', 'waterfront', 'view', 'condition', 'grade']
 
-
+# Need to clean up how our date sold value is displayed.
 def change_datetime(df, col):
     df[col] = df[col].apply(lambda x: x[:-7]).astype(int)
     df[col] = df[col].apply(lambda x: pd.to_datetime(x, format='%Y%m%d'))
     return df[col]
+
+# creating a new year built column that will be by decade.
 df['date_bin'] = df['yr_built']
 df['date_bin'] = df['date_bin'].apply(lambda x: (math.floor(x/10) * 10))
+
+# Need to change it to a string variable because when it's an integer it will think it's a continuous variable
+# and not a categorical variable.
 df['date_bin'] = df['date_bin'].astype(str)
 cat_orders = ['1900', '1910', '1920', '1930', '1940', '1950', 
                 '1960', '1970', '1980', '1990', '2000', '2010']
 
+# we have one house with a number of bedrooms out at 33.
+# this is a very big outlier that will skew all of our charts, so we are removing it.
 df = df[df.bedrooms < 12]
 
+
 df['date'] = change_datetime(df, 'date')
+
+# Changing waterfront variable to a string so plotly knows it's categorical and not continous.
 df['waterfront'] = df['waterfront'].astype(str)
-df_bar_group = df[df.bedrooms < 30].groupby(['bedrooms'], as_index=False).mean() 
-# df_wat_bed_group = df[df[.bedrooms < 30].groupby(['waterfront'], as_index=False).mean()
 
-
-# print(df.columns)
-# print(list(df['bedrooms'].unique()))
 external_stylesheets = [dbc.themes.DARKLY]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -91,6 +98,29 @@ app.layout = html.Div(
         ),
         dcc.Graph(
             id='bar'
+        ),
+        html.Div(
+            children=[
+                html.Div(
+                    dcc.Graph(
+                        id='hist-variable'
+                    ),
+                        style={'display':'inline-block'}
+                ),
+                html.Div(
+                    dcc.Graph(
+                        id='hist-year'
+                    ),
+                        style={'display':'inline-block'}
+                ),
+            ],
+            style={'display':'inline-block'}
+        ),
+
+        html.Div(
+            dcc.Graph(
+                id='hist-price'
+            ),
         )
     ]
 )
@@ -98,13 +128,11 @@ app.layout = html.Div(
         [Input('categorical-variables', 'value')])
 
 def update_bar(val):
-    #TODO Fix the graph so it shows the graph better.
     df_new = df.groupby([val, 'date_bin'], as_index=False).mean()
     df_new[val] = df_new[val].astype(str)
-    print(str(val), df[val])
+    # In order to not show the observation lines for each value, we need to first group our data.
     fig = px.bar(
             df_new,
-            # x='date',
             x=val,
             y='price',
             template='plotly_dark',
@@ -113,49 +141,69 @@ def update_bar(val):
             category_orders ={'date_bin': cat_orders}
 
         )
+    fig.update_layout(
+            title_text = 'Average Price Based on Variable Selected and Filtered by Year House was Built',
+            xaxis_title = val,
+            yaxis_title = 'Average Price',
+        )
 
     return fig
 
-# @app.callback(Output('bar-graph', 'figure'),
-#         [Input('bedrooms', 'value')])
-# def update_bar(val):
-#     df2 = df.copy()
-#     df2 = df2.loc[df2.bedrooms ==val]
-#     df2['floors'] = df2['floors'].astype(str)
-#     df3 = df2.groupby(['floors', 'date'], as_index=False).mean()
-#     f = px.bar(
-#             df3,
-#             x='date',
-#             y='price',
-#             color='floors',
-#             barmode='stack',
-#             template='plotly_dark'
-#         )
-#     f.update_layout(
-#             title='Year House Built Grouped By Number of Floors',
-#             bargap=0.15,
-#             bargroupgap=0.05
-#         )
-#     return f
-# 
-# @app.callback(Output('line-graph-bedrooms', 'figure'),
-#         [Input('bedrooms','value')])
-# 
-# def update_line(val):
-#     # TODO Need to make this graph look better.  What are some other factors we can look at that impact the price?? 
-#     df_wat_bed_group = df[df.bedrooms < 30].groupby(['waterfront', 'date'], as_index=False).mean()
-#     df_wat_bed_group = df_wat_bed_group.loc[df_wat_bed_group.bedrooms == val]
-#     j = px.bar(
-#            df_wat_bed_group,
-#            x='date',
-#            y='price',
-#            color='waterfront',
-#            template='plotly_dark',
-#            barmode='group'
-#         )
-# 
-# 
-#     return j
-# 
+@app.callback(Output('hist-variable', 'figure'),
+        [Input('categorical-variables', 'value')])
+
+def update_hist(val):
+    fig = px.histogram(
+            df,
+            x=val,
+            template='plotly_dark',
+            histnorm='probability density',
+        )
+    fig.update_layout(
+            title_text = f'Distribution of the {val} variables',
+            xaxis_title = val,
+            yaxis_title = 'Count of Occurence',
+            width = 728.4,
+        )
+    return fig
+
+@app.callback(Output('hist-year', 'figure'),
+        [Input('categorical-variables', 'value')])
+
+def update_hist_year(val):
+    fig = px.histogram(
+            df,
+            x='date_bin',
+            color=val,
+            template='plotly_dark'
+        )
+    fig.update_layout(
+            width=728.4,
+            title_text='Decade Distribution colored by each unique categorical variable selected',
+            xaxis_title='Decade',
+            yaxis_title='Count of Occurence'
+        )
+    return fig
+
+@app.callback(Output('hist-price', 'figure'),
+        [Input('categorical-variables', 'value')])
+
+def update_hist_price(val):
+    df_new = df[df['price'] < 5000000]
+    # Filtered by less than 5 mil to eliminate some outliers so as to not clutter the histogram.
+    fig = px.histogram(
+            df_new,
+            x='price',
+            color=val,
+            template='plotly_dark'
+        )
+    fig.update_layout(
+            width=1456,
+            title_text='Price Distribution Colored by Unique Categorical Variable',
+            xaxis_title='Price',
+            yaxis_title='Count of Occurence',
+        )
+    return fig
+
 if __name__ == '__main__':
     app.run_server(debug=True)
