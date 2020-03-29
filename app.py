@@ -105,22 +105,22 @@ app.layout = html.Div(
                     dcc.Graph(
                         id='hist-variable'
                     ),
-                        style={'display':'inline-block'}
+                        style={'display':'inline-block', 'width': '50%'}
                 ),
                 html.Div(
                     dcc.Graph(
                         id='hist-year'
                     ),
-                        style={'display':'inline-block'}
+                        style={'display':'inline-block', 'width': '50%'}
                 ),
             ],
-            style={'display':'inline-block'}
         ),
 
         html.Div(
             dcc.Graph(
                 id='hist-price'
             ),
+        style={'width': '100%'}
         )
     ]
 )
@@ -163,7 +163,6 @@ def update_hist(val):
             title_text = f'Distribution of the {val} variables',
             xaxis_title = val,
             yaxis_title = 'Count of Occurence',
-            width = 728.4,
         )
     return fig
 
@@ -178,7 +177,6 @@ def update_hist_year(val):
             template='plotly_dark'
         )
     fig.update_layout(
-            width=728.4,
             title_text='Decade Distribution colored by each unique categorical variable selected',
             xaxis_title='Decade',
             yaxis_title='Count of Occurence'
@@ -198,7 +196,6 @@ def update_hist_price(val):
             template='plotly_dark'
         )
     fig.update_layout(
-            width=1456,
             title_text='Price Distribution Colored by Unique Categorical Variable',
             xaxis_title='Price',
             yaxis_title='Count of Occurence',
