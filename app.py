@@ -1,5 +1,7 @@
 #!/usr/bin python3
 
+#import my_themes
+
 import dash
 import pandas as pd
 import dash_core_components as dcc
@@ -16,18 +18,35 @@ import math as math
 df = pd.read_csv('data/kc_house_data.csv')
 
 text_colors = 'rgb(0, 0, 0)'
+
+#my_template = pio.templates['lively']
+#colors = [
+#        '#375a7f', #blue 0
+#        '#6610f2', #indigo 1
+#        '#6f42c1', #purple 2
+#        '#e83e8c', #pink 3
+#        '#E74C3C', #red 4
+#        '#fd7e14', #orange 5
+#        '#F39C12', #yellow 6
+#        '#00bc8c', #green 7
+#        '#20c997', #teal 8
+#        '#3498DB'  #cyan 9
+#    ]
+
 colors = [
-        '#375a7f', #blue 0
-        '#6610f2', #indigo 1
-        '#6f42c1', #purple 2
-        '#e83e8c', #pink 3
-        '#E74C3C', #red 4
-        '#fd7e14', #orange 5
-        '#F39C12', #yellow 6
-        '#00bc8c', #green 7
-        '#20c997', #teal 8
-        '#3498DB'  #cyan 9
-    ]
+    '#02223c',
+    '#FF0022',
+    '#FF5C72',
+    '#A0757B',
+    '#41EAD4',
+    '#0c6E61',
+    '#FDFFFC',
+    '#B91372',
+    '#CFC0BD',
+    '#586F6B',
+    '#F2BB05',
+    '#FFCF99'
+]
 
 # categorical_variables = ['bathrooms', 'floors', 'waterfront', 'view', 'condition', 'grade']
 
@@ -140,7 +159,8 @@ def update_bar(val):
             template='plotly_dark',
             color='date_bin',
             barmode='group',
-            category_orders ={'date_bin': cat_orders}
+            category_orders ={'date_bin': cat_orders},
+            color_discrete_sequence=colors
 
         )
     fig.update_layout(
@@ -160,6 +180,7 @@ def update_hist(val):
             x=val,
             template='plotly_dark',
             histnorm='probability density',
+            color_discrete_sequence=colors
         )
     fig.update_layout(
             title_text = f'Distribution of the {val} variables',
@@ -176,7 +197,8 @@ def update_hist_year(val):
             df,
             x='date_bin',
             color=val,
-            template='plotly_dark'
+            template='plotly_dark',
+            color_discrete_sequence=colors
         )
     fig.update_layout(
             title_text='Decade Distribution colored by each unique categorical variable selected',
@@ -195,7 +217,9 @@ def update_hist_price(val):
             df_new,
             x='price',
             color=val,
-            template='plotly_dark'
+            template='plotly_dark',
+            color_discrete_sequence=colors
+
         )
     fig.update_layout(
             title_text='Price Distribution Colored by Unique Categorical Variable',
