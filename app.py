@@ -59,9 +59,11 @@ df['waterfront'] = df['waterfront'].astype(str)
 
 external_stylesheets = [dbc.themes.DARKLY]
 
+# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-app.layout = html.Div(
+app.layout = html.Div(style={'backgroundColor': '#111111'},
     children=[
         html.H1(
             children="King's County Housing Data (2014 - 2015)",
