@@ -19,20 +19,6 @@ df = pd.read_csv('data/kc_house_data.csv')
 
 text_colors = 'rgb(0, 0, 0)'
 
-#my_template = pio.templates['lively']
-#colors = [
-#        '#375a7f', #blue 0
-#        '#6610f2', #indigo 1
-#        '#6f42c1', #purple 2
-#        '#e83e8c', #pink 3
-#        '#E74C3C', #red 4
-#        '#fd7e14', #orange 5
-#        '#F39C12', #yellow 6
-#        '#00bc8c', #green 7
-#        '#20c997', #teal 8
-#        '#3498DB'  #cyan 9
-#    ]
-
 colors = [
     '#02223c',
     '#FF0022',
@@ -149,6 +135,7 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
         [Input('categorical-variables', 'value')])
 
 def update_bar(val):
+    df.sort_values('date_bin', ascending=True, ignore_index=True, inplace=True)
     df_new = df.groupby([val, 'date_bin'], as_index=False).mean()
     df_new[val] = df_new[val].astype(str)
     # In order to not show the observation lines for each value, we need to first group our data.
@@ -157,10 +144,14 @@ def update_bar(val):
             x=val,
             y='price',
             template='plotly_dark',
-            color='date_bin',
+            animation_frame='date_bin',
+            #color='date_bin',
             barmode='group',
-            category_orders ={'date_bin': cat_orders},
-            color_discrete_sequence=colors
+            #category_orders ={'date_bin': cat_orders},
+            color_discrete_sequence=colors,
+            range_y=[0, 1500000],
+            range_x=[0,11]
+
 
         )
     fig.update_layout(
