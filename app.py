@@ -64,6 +64,23 @@ df['waterfront'] = df['waterfront'].astype(str)
 
 external_stylesheets = [dbc.themes.DARKLY]
 
+
+def getVariableFig(variable, df):
+    df[variable] = df[variable].astype(str)
+    df.sort_values('date_bin', ascending=True, ignore_index=True, inplace=True)
+    df = df[df['price'] < 1500000]
+    df = df[df['sqft_living'] < 4500]
+    fig = px.scatter(
+        df,
+        x='sqft_living', 
+        y='price', 
+        color=variable, 
+        animation_frame='date_bin',
+        template='plotly_dark',
+        color_discrete_sequence=colors
+     )
+    return fig
+
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -79,6 +96,34 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
             ''',
             style={'textAlign': 'center'}
         ),
+       dcc.Graph(
+            id='bedrooms',
+            figure=getVariableFig('bedrooms', df)
+        ),
+        dcc.Graph(
+            id='bathrooms',
+            figure=getVariableFig('bathrooms', df)
+         ),
+        dcc.Graph(
+            id='floors',
+            figure=getVariableFig('bathrooms', df)
+         ),
+        dcc.Graph(
+            id='waterfront',
+            figure=getVariableFig('bathrooms', df)
+         ),
+        dcc.Graph(
+            id='view',
+            figure=getVariableFig('bathrooms', df)
+         ),
+        dcc.Graph(
+            id='condition',
+            figure=getVariableFig('bathrooms', df)
+         ),
+        dcc.Graph(
+            id='grade',
+            figure=getVariableFig('bathrooms', df)
+         ),
         html.Div(
             children=[
                 dbc.FormGroup(
@@ -102,9 +147,6 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
                 ]
                 ),
             ],
-        ),
-        dcc.Graph(
-            id='bar'
         ),
         html.Div(
             children=[
