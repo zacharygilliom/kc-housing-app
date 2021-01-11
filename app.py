@@ -14,6 +14,7 @@ import plotly.express as px
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import math as math
+from natsort import index_natsorted
 
 df = pd.read_csv('data/kc_house_data.csv')
 
@@ -106,23 +107,23 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
          ),
         dcc.Graph(
             id='floors',
-            figure=getVariableFig('bathrooms', df)
+            figure=getVariableFig('floors', df)
          ),
         dcc.Graph(
             id='waterfront',
-            figure=getVariableFig('bathrooms', df)
+            figure=getVariableFig('waterfront', df)
          ),
         dcc.Graph(
             id='view',
-            figure=getVariableFig('bathrooms', df)
+            figure=getVariableFig('view', df)
          ),
         dcc.Graph(
             id='condition',
-            figure=getVariableFig('bathrooms', df)
+            figure=getVariableFig('condition', df)
          ),
         dcc.Graph(
             id='grade',
-            figure=getVariableFig('bathrooms', df)
+            figure=getVariableFig('grade', df)
          ),
         html.Div(
             children=[
@@ -208,6 +209,7 @@ def update_bar(val):
         [Input('categorical-variables', 'value')])
 
 def update_hist(val):
+    df.sort_values(val, key=lambda x: np.argsort(index_natsorted(x)))
     fig = px.histogram(
             df,
             x=val,
@@ -226,6 +228,7 @@ def update_hist(val):
         [Input('categorical-variables', 'value')])
 
 def update_hist_year(val):
+    df.sort_values('date_bin', ignore_index=True, inplace=True)
     fig = px.histogram(
             df,
             x='date_bin',
@@ -244,7 +247,7 @@ def update_hist_year(val):
         [Input('categorical-variables', 'value')])
 
 def update_hist_price(val):
-    df_new = df[df['price'] < 5000000]
+    df_new = df[df['price'] < 2000000]
     # Filtered by less than 5 mil to eliminate some outliers so as to not clutter the histogram.
     fig = px.histogram(
             df_new,
