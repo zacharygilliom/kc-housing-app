@@ -14,7 +14,7 @@ import plotly.express as px
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import math as math
-from natsort import index_natsorted
+from natsort import natsorted 
 
 df = pd.read_csv('data/kc_house_data.csv')
 
@@ -65,23 +65,6 @@ df['waterfront'] = df['waterfront'].astype(str)
 
 external_stylesheets = [dbc.themes.DARKLY]
 
-
-def getVariableFig(variable, df):
-    df[variable] = df[variable].astype(str)
-    df.sort_values('date_bin', ascending=True, ignore_index=True, inplace=True)
-    df = df[df['price'] < 1500000]
-    df = df[df['sqft_living'] < 4500]
-    fig = px.scatter(
-        df,
-        x='sqft_living', 
-        y='price', 
-        color=variable, 
-        animation_frame='date_bin',
-        template='plotly_dark',
-        color_discrete_sequence=colors
-     )
-    return fig
-
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -97,34 +80,6 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
             ''',
             style={'textAlign': 'center'}
         ),
-       dcc.Graph(
-            id='bedrooms',
-            figure=getVariableFig('bedrooms', df)
-        ),
-        dcc.Graph(
-            id='bathrooms',
-            figure=getVariableFig('bathrooms', df)
-         ),
-        dcc.Graph(
-            id='floors',
-            figure=getVariableFig('floors', df)
-         ),
-        dcc.Graph(
-            id='waterfront',
-            figure=getVariableFig('waterfront', df)
-         ),
-        dcc.Graph(
-            id='view',
-            figure=getVariableFig('view', df)
-         ),
-        dcc.Graph(
-            id='condition',
-            figure=getVariableFig('condition', df)
-         ),
-        dcc.Graph(
-            id='grade',
-            figure=getVariableFig('grade', df)
-         ),
         html.Div(
             children=[
                 dbc.FormGroup(
@@ -148,6 +103,9 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
                 ]
                 ),
             ],
+        ),
+        dcc.Graph(
+            id='scatter-year-price',
         ),
         html.Div(
             children=[
@@ -174,33 +132,28 @@ app.layout = html.Div(style={'backgroundColor': '#111111'},
         )
     ]
 )
-@app.callback(Output('bar', 'figure'),
+@app.callback(Output('scatter-year-price', 'figure'),
         [Input('categorical-variables', 'value')])
 
 def update_bar(val):
-    df.sort_values('date_bin', ascending=True, ignore_index=True, inplace=True)
-    df_new = df.groupby([val, 'date_bin'], as_index=False).mean()
-    df_new[val] = df_new[val].astype(str)
+    df.sort_values('yr_built', ascending=True, ignore_index=True, inplace=True)
+    #df_new = df.groupby([val, 'date_bin'], as_index=False).mean()
+    df[val] = df[val].astype(str)
     # In order to not show the observation lines for each value, we need to first group our data.
-    fig = px.bar(
-            df_new,
-            x=val,
+    fig = px.scatter(
+            df,
+            x='sqft_living',
             y='price',
             template='plotly_dark',
-            animation_frame='date_bin',
-            #color='date_bin',
-            barmode='group',
-            #category_orders ={'date_bin': cat_orders},
+            #animation_frame='yr_built',
+            color=val,
             color_discrete_sequence=colors,
-            range_y=[0, 1500000],
-            range_x=[0,11]
-
-
+            #size='sqft_living'
         )
     fig.update_layout(
             title_text = 'Average Price Based on Variable Selected and Filtered by Year House was Built',
-            xaxis_title = val,
-            yaxis_title = 'Average Price',
+            xaxis_title = 'Square Foot Living Area',
+            yaxis_title = 'Price',
         )
 
     return fig
@@ -209,10 +162,10 @@ def update_bar(val):
         [Input('categorical-variables', 'value')])
 
 def update_hist(val):
-    df.sort_values(val, key=lambda x: np.argsort(index_natsorted(x)))
+    df.index = natsorted(df[val])
     fig = px.histogram(
             df,
-            x=val,
+            x=df.index,
             template='plotly_dark',
             histnorm='probability density',
             color_discrete_sequence=colors
@@ -248,7 +201,8 @@ def update_hist_year(val):
 
 def update_hist_price(val):
     df_new = df[df['price'] < 2000000]
-    # Filtered by less than 5 mil to eliminate some outliers so as to not clutter the histogram.
+    df_new[val] = df_new[val].astype(str)
+     # Filtered by less than 5 mil to eliminate some outliers so as to not clutter the histogram.
     fig = px.histogram(
             df_new,
             x='price',
